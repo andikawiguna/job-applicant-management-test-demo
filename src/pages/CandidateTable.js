@@ -16,9 +16,10 @@ import {
   Alert,
   Pagination,
 } from '@mui/material';
-import { useCandidates } from '../hooks/useCandidates';
+import { useAllCandidates } from '../hooks/useCandidates';
 import { getStatusColor, formatDate } from '../utils/statusColors';
-import CandidateModal from '../components/CandidateModal';
+import CandidateDrawer from '../components/CandidateDrawer';
+import SearchAndFilter from '../components/SearchAndFilter';
 
 /**
  * Table view for displaying candidates with sorting functionality
@@ -28,9 +29,10 @@ const CandidateTable = () => {
   const [orderBy, setOrderBy] = useState('date');
   const [order, setOrder] = useState('desc');
   const [selectedCandidate, setSelectedCandidate] = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [filters, setFilters] = useState({});
   
-  const { data, isLoading, error } = useCandidates(page, 10);
+  const { data: allCandidates, isLoading, error } = useAllCandidates();
 
   // Handle sorting
   const handleSort = (property) => {
@@ -44,11 +46,53 @@ const CandidateTable = () => {
     setPage(newPage);
   };
 
-  // Sort candidates based on current sort settings
-  const sortedCandidates = useMemo(() => {
-    if (!data?.data) return [];
+  // Handle filter changes
+  const handleFiltersChange = (newFilters) => {
+    setFilters(newFilters);
+    setPage(1); // Reset to first page when filters change
+  };
+
+  // Filter and sort candidates
+  const filteredAndSortedCandidates = useMemo(() => {
+    if (!allCandidates) return [];
     
-    return [...data.data].sort((a, b) => {
+    let filtered = [...allCandidates];
+    
+    // Apply filters
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(candidate => 
+        candidate.name.toLowerCase().includes(searchLower) ||
+        candidate.email.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    if (filters.status) {
+      filtered = filtered.filter(candidate => candidate.status === filters.status);
+    }
+    
+    if (filters.role) {
+      filtered = filtered.filter(candidate => candidate.role === filters.role);
+    }
+    
+    if (filters.assignee) {
+      filtered = filtered.filter(candidate => candidate.assignee === filters.assignee);
+    }
+    
+    if (filters.dateFrom) {
+      filtered = filtered.filter(candidate => 
+        candidate.date >= filters.dateFrom
+      );
+    }
+    
+    if (filters.dateTo) {
+      filtered = filtered.filter(candidate => 
+        candidate.date <= filters.dateTo
+      );
+    }
+    
+    // Apply sorting
+    return filtered.sort((a, b) => {
       let aValue = a[orderBy];
       let bValue = b[orderBy];
       
@@ -70,17 +114,30 @@ const CandidateTable = () => {
         return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
       }
     });
-  }, [data?.data, order, orderBy]);
+  }, [allCandidates, order, orderBy, filters]);
+
+  // Paginate results
+  const paginatedCandidates = useMemo(() => {
+    const startIndex = (page - 1) * 10;
+    return filteredAndSortedCandidates.slice(startIndex, startIndex + 10);
+  }, [filteredAndSortedCandidates, page]);
+
+  const totalPages = Math.ceil(filteredAndSortedCandidates.length / 10);
 
   // Handle row click to show details
   const handleRowClick = (candidate) => {
     setSelectedCandidate(candidate);
-    setModalOpen(true);
+    setDrawerOpen(true);
   };
 
-  const handleCloseModal = () => {
-    setModalOpen(false);
+  const handleCloseDrawer = () => {
+    setDrawerOpen(false);
     setSelectedCandidate(null);
+  };
+
+  const handleStatusUpdate = (candidateId, newStatus) => {
+    // This would update the backend and refetch data
+    console.log(`Status updated for candidate ${candidateId} to ${newStatus}`);
   };
 
   if (isLoading) {
@@ -107,13 +164,26 @@ const CandidateTable = () => {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ py: 4 }}>
+      <Box 
+        sx={{ 
+          py: 4, 
+          position: 'relative',
+          overflow: 'hidden',
+          minHeight: '80vh',
+        }} 
+        data-drawer-container
+      >
         <Typography variant="h4" component="h1" gutterBottom fontWeight="600">
           Candidates - Dashboard Table
         </Typography>
         
+        <SearchAndFilter
+          onFiltersChange={handleFiltersChange}
+          filters={filters}
+        />
+        
         <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-          Showing {data?.data?.length || 0} of {data?.total || 0} candidates
+          Showing {paginatedCandidates.length} of {filteredAndSortedCandidates.length} candidates
         </Typography>
 
         <TableContainer component={Paper} sx={{ boxShadow: 1 }}>
@@ -161,7 +231,7 @@ const CandidateTable = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {sortedCandidates.map((candidate) => (
+              {paginatedCandidates.map((candidate) => (
                 <TableRow
                   key={candidate.id}
                   hover
@@ -190,10 +260,10 @@ const CandidateTable = () => {
           </Table>
         </TableContainer>
 
-        {data?.totalPages > 1 && (
+        {totalPages > 1 && (
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
             <Pagination
-              count={data.totalPages}
+              count={totalPages}
               page={page}
               onChange={handlePageChange}
               color="primary"
@@ -202,10 +272,11 @@ const CandidateTable = () => {
           </Box>
         )}
 
-        <CandidateModal
-          open={modalOpen}
-          onClose={handleCloseModal}
+        <CandidateDrawer
+          open={drawerOpen}
+          onClose={handleCloseDrawer}
           candidate={selectedCandidate}
+          onStatusUpdate={handleStatusUpdate}
         />
       </Box>
     </Container>

@@ -12,11 +12,13 @@ import {
   Grid,
   CircularProgress,
   Alert,
+  Menu,
 } from '@mui/material';
 import { Person, Visibility } from '@mui/icons-material';
 import { useCandidates } from '../hooks/useCandidates';
 import { getStatusColor, formatDate } from '../utils/statusColors';
 import CandidateModal from '../components/CandidateModal';
+import StatusChangeForm from '../components/StatusChangeForm';
 
 /**
  * Card list view for displaying candidates
@@ -26,6 +28,10 @@ const CandidateList = () => {
   const [page, setPage] = useState(1);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [statusMenuAnchor, setStatusMenuAnchor] = useState(null);
+  const [statusChangeCandidate, setStatusChangeCandidate] = useState(null);
+  const [statusLoading, setStatusLoading] = useState(false);
+  const [statusError, setStatusError] = useState(null);
   
   const { data, isLoading, error } = useCandidates(page, 10);
 
@@ -43,6 +49,37 @@ const CandidateList = () => {
   const handleCloseModal = () => {
     setModalOpen(false);
     setSelectedCandidate(null);
+  };
+
+  const handleStatusMenuOpen = (event, candidate) => {
+    event.stopPropagation();
+    setStatusMenuAnchor(event.currentTarget);
+    setStatusChangeCandidate(candidate);
+  };
+
+  const handleStatusMenuClose = () => {
+    setStatusMenuAnchor(null);
+    setStatusChangeCandidate(null);
+    setStatusError(null);
+  };
+
+  const handleStatusChange = async (newStatus) => {
+    setStatusLoading(true);
+    setStatusError(null);
+
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // In a real app, you would update the backend and refetch data
+      console.log(`Status changed for ${statusChangeCandidate.name} to ${newStatus}`);
+      
+      handleStatusMenuClose();
+    } catch (err) {
+      setStatusError('Failed to update status. Please try again.');
+    } finally {
+      setStatusLoading(false);
+    }
   };
 
   if (isLoading) {
@@ -116,6 +153,15 @@ const CandidateList = () => {
                       >
                         View Details
                       </Button>
+                      
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={(e) => handleStatusMenuOpen(e, candidate)}
+                        sx={{ minWidth: 'auto', px: 1 }}
+                      >
+                        Quick Action
+                      </Button>
                     </Box>
                   </Box>
                 </CardContent>
@@ -141,6 +187,27 @@ const CandidateList = () => {
           onClose={handleCloseModal}
           candidate={selectedCandidate}
         />
+
+        <Menu
+          anchorEl={statusMenuAnchor}
+          open={Boolean(statusMenuAnchor)}
+          onClose={handleStatusMenuClose}
+          PaperProps={{
+            sx: { minWidth: 250 }
+          }}
+        >
+          <Box sx={{ p: 2 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Change Status for {statusChangeCandidate?.name}
+            </Typography>
+            <StatusChangeForm
+              currentStatus={statusChangeCandidate?.status}
+              onStatusChange={handleStatusChange}
+              loading={statusLoading}
+              error={statusError}
+            />
+          </Box>
+        </Menu>
       </Box>
     </Container>
   );
