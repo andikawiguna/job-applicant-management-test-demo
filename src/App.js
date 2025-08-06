@@ -3,7 +3,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { theme } from './theme/theme';
+import { createAppTheme } from './theme/theme';
+import { useStore } from './store/useStore';
 import Layout from './components/Layout/Layout';
 import Home from './pages/Home';
 import CandidateList from './pages/CandidateList';
@@ -24,6 +25,9 @@ const queryClient = new QueryClient({
  * Main App component with routing and providers
  */
 function App() {
+  const { darkMode } = useStore();
+  const theme = createAppTheme(darkMode ? 'dark' : 'light');
+  
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>

@@ -6,14 +6,14 @@ import {
   IconButton,
   Box,
 } from '@mui/material';
-import { Menu } from '@mui/icons-material';
+import { Menu, LightMode, DarkMode } from '@mui/icons-material';
 import { useStore } from '../../store/useStore';
 
 /**
  * Application header with sidebar toggle
  */
 const Header = () => {
-  const { toggleSidebar } = useStore();
+  const { toggleSidebar, darkMode, toggleDarkMode } = useStore();
 
   return (
     <AppBar 
@@ -41,6 +41,14 @@ const Header = () => {
             Job Applicant Management System
           </Typography>
         </Box>
+        
+        <IconButton
+          color="inherit"
+          onClick={toggleDarkMode}
+          sx={{ ml: 1 }}
+        >
+          {darkMode ? <LightMode /> : <DarkMode />}
+        </IconButton>
       </Toolbar>
     </AppBar>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Container,
   Typography,
@@ -18,14 +18,22 @@ import {
 } from '@mui/material';
 import { useAllCandidates } from '../hooks/useCandidates';
 import { getStatusColor, formatDate } from '../utils/statusColors';
+import { useStore } from '../store/useStore';
 import CandidateDrawer from '../components/CandidateDrawer';
 import SearchAndFilter from '../components/SearchAndFilter';
+import StatsCards from '../components/StatsCards';
+import Breadcrumb from '../components/Breadcrumb';
 
 /**
  * Table view for displaying candidates with sorting functionality
  */
 const CandidateTable = () => {
-  const [page, setPage] = useState(1);
+  const { currentPage, setCurrentPage } = useStore();
+  const [page, setPage] = useState(currentPage.table);
+  
+  useEffect(() => {
+    setCurrentPage('table', page);
+  }, [page, setCurrentPage]);
   const [orderBy, setOrderBy] = useState('date');
   const [order, setOrder] = useState('desc');
   const [selectedCandidate, setSelectedCandidate] = useState(null);
@@ -34,11 +42,20 @@ const CandidateTable = () => {
   
   const { data: allCandidates, isLoading, error } = useAllCandidates();
 
-  // Handle sorting
+  // Handle sorting with 3-state cycle: none -> asc -> desc -> none
   const handleSort = (property) => {
-    const isAsc = orderBy === property && order === 'asc';
-    setOrder(isAsc ? 'desc' : 'asc');
-    setOrderBy(property);
+    if (orderBy !== property) {
+      // First click on new column: set to ascending
+      setOrder('asc');
+      setOrderBy(property);
+    } else if (order === 'asc') {
+      // Second click: set to descending
+      setOrder('desc');
+    } else {
+      // Third click: reset to default (no sorting)
+      setOrder('desc');
+      setOrderBy('date'); // Reset to default sort by date
+    }
   };
 
   // Handle pagination change
@@ -164,18 +181,13 @@ const CandidateTable = () => {
 
   return (
     <Container maxWidth="lg">
-      <Box 
-        sx={{ 
-          py: 4, 
-          position: 'relative',
-          overflow: 'hidden',
-          minHeight: '80vh',
-        }} 
-        data-drawer-container
-      >
+      <Box sx={{ py: 4 }}>
+        <Breadcrumb />
         <Typography variant="h4" component="h1" gutterBottom fontWeight="600">
           Candidates - Dashboard Table
         </Typography>
+        
+        <StatsCards candidates={allCandidates || []} />
         
         <SearchAndFilter
           onFiltersChange={handleFiltersChange}
@@ -189,45 +201,51 @@ const CandidateTable = () => {
         <TableContainer component={Paper} sx={{ boxShadow: 1 }}>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: 'grey.50' }}>
-                <TableCell>
+              <TableRow sx={{ 
+                backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'grey.800' : 'grey.50'
+              }}>
+                <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>
                   <TableSortLabel
                     active={orderBy === 'name'}
                     direction={orderBy === 'name' ? order : 'asc'}
                     onClick={() => handleSort('name')}
+                    hideSortIcon={orderBy !== 'name'}
                   >
                     Name
                   </TableSortLabel>
                 </TableCell>
-                <TableCell>Email</TableCell>
-                <TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>Email</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>
                   <TableSortLabel
                     active={orderBy === 'role'}
                     direction={orderBy === 'role' ? order : 'asc'}
                     onClick={() => handleSort('role')}
+                    hideSortIcon={orderBy !== 'role'}
                   >
                     Role Applied
                   </TableSortLabel>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>
                   <TableSortLabel
                     active={orderBy === 'status'}
                     direction={orderBy === 'status' ? order : 'asc'}
                     onClick={() => handleSort('status')}
+                    hideSortIcon={orderBy !== 'status'}
                   >
                     Status
                   </TableSortLabel>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>
                   <TableSortLabel
                     active={orderBy === 'date'}
                     direction={orderBy === 'date' ? order : 'asc'}
                     onClick={() => handleSort('date')}
+                    hideSortIcon={orderBy !== 'date'}
                   >
                     Applied Date
                   </TableSortLabel>
                 </TableCell>
-                <TableCell>HR Assigned</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>HR Assigned</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

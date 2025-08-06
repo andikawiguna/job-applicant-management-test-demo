@@ -2,11 +2,11 @@ import { createTheme } from '@mui/material/styles';
 
 /**
  * Creates Material-UI theme with light/dark mode support
- * Currently configured for light mode only
+ * @param {string} mode - 'light' or 'dark'
  */
-export const theme = createTheme({
+export const createAppTheme = (mode) => createTheme({
   palette: {
-    mode: 'light',
+    mode,
     primary: {
       main: '#2563eb',
       light: '#60a5fa',
@@ -18,12 +18,12 @@ export const theme = createTheme({
       dark: '#5b21b6',
     },
     background: {
-      default: '#f8fafc',
-      paper: '#ffffff',
+      default: mode === 'light' ? '#f8fafc' : '#121212',
+      paper: mode === 'light' ? '#ffffff' : '#1e1e1e',
     },
     text: {
-      primary: '#1e293b',
-      secondary: '#64748b',
+      primary: mode === 'light' ? '#1e293b' : '#ffffff',
+      secondary: mode === 'light' ? '#64748b' : '#b0b0b0',
     },
     success: {
       main: '#10b981',
@@ -79,3 +79,6 @@ export const theme = createTheme({
     },
   },
 });
+
+// Default light theme for backward compatibility
+export const theme = createAppTheme('light');

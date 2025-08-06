@@ -16,6 +16,7 @@ import {
   TableChart,
   Info,
 } from '@mui/icons-material';
+import Breadcrumb from '../components/Breadcrumb';
 
 /**
  * Home page component with welcome message and navigation instructions
@@ -24,6 +25,7 @@ const Home = () => {
   return (
     <Container maxWidth="lg">
       <Box sx={{ py: 4 }}>
+        <Breadcrumb />
         <Typography variant="h4" component="h1" gutterBottom fontWeight="600">
           Welcome to Job Applicant Management System
         </Typography>

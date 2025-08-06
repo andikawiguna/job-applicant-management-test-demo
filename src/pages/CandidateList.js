@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Typography,
@@ -17,15 +17,22 @@ import {
 import { Person, Visibility } from '@mui/icons-material';
 import { useCandidates } from '../hooks/useCandidates';
 import { getStatusColor, formatDate } from '../utils/statusColors';
+import { useStore } from '../store/useStore';
 import CandidateModal from '../components/CandidateModal';
 import StatusChangeForm from '../components/StatusChangeForm';
+import Breadcrumb from '../components/Breadcrumb';
 
 /**
  * Card list view for displaying candidates
  * Shows candidates in card format with pagination
  */
 const CandidateList = () => {
-  const [page, setPage] = useState(1);
+  const { currentPage, setCurrentPage } = useStore();
+  const [page, setPage] = useState(currentPage.list);
+  
+  useEffect(() => {
+    setCurrentPage('list', page);
+  }, [page, setCurrentPage]);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [statusMenuAnchor, setStatusMenuAnchor] = useState(null);
@@ -107,6 +114,7 @@ const CandidateList = () => {
   return (
     <Container maxWidth="lg">
       <Box sx={{ py: 4 }}>
+        <Breadcrumb />
         <Typography variant="h4" component="h1" gutterBottom fontWeight="600">
           Candidates - Card List
         </Typography>

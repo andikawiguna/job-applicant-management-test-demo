@@ -65,29 +65,24 @@ const CandidateDrawer = ({ open, onClose, candidate, onStatusUpdate }) => {
       open={open}
       onClose={onClose}
       variant="temporary"
-      ModalProps={{
-        container: () => document.querySelector('[data-drawer-container]'),
-        style: { position: 'absolute' },
-        keepMounted: false,
-      }}
       PaperProps={{
         sx: {
           width: { xs: '100%', sm: 400 },
-          position: 'absolute',
           height: '100%',
-          right: 0,
-          top: 0,
           borderRadius: 0,
           transition: 'transform 0.3s ease-in-out',
+          zIndex: (theme) => theme.zIndex.drawer + 2,
         },
       }}
       BackdropProps={{
         sx: {
-          position: 'absolute',
           backgroundColor: 'transparent',
         },
       }}
       transitionDuration={300}
+      sx={{
+        zIndex: (theme) => theme.zIndex.drawer + 2,
+      }}
     >
       <Box sx={{ p: 3, height: '100%', overflow: 'auto' }}>
         {/* Header */}
@@ -106,10 +101,13 @@ const CandidateDrawer = ({ open, onClose, candidate, onStatusUpdate }) => {
             onClick={onClose} 
             size="small"
             sx={{ 
-              bgcolor: 'grey.100',
-              '&:hover': { bgcolor: 'grey.200' },
+              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'grey.700' : 'grey.100',
+              '&:hover': { 
+                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'grey.600' : 'grey.200'
+              },
               border: '1px solid',
-              borderColor: 'grey.300'
+              borderColor: (theme) => theme.palette.mode === 'dark' ? 'grey.600' : 'grey.300',
+              color: 'text.primary'
             }}
           >
             <Close />
